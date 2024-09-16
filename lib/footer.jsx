@@ -1,34 +1,35 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import axios from "axios"
-import { useRouter } from "next/navigation"
+import axios from "axios";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Chat from "./chat";
 
 export default function Footer(props) {
   function AdminFooterOrNot() {
     if (props.isAdmin) {
       return (
         <>
-          <div className="open-chat"></div>
+          <Chat />
           <p className="logout-text">
             <a href="" onClick={handleClick}>
               Logout
             </a>
           </p>
         </>
-      )
+      );
     } else {
-      return <></>
+      return <></>;
     }
   }
 
-  const router = useRouter()
+  const router = useRouter();
 
   async function handleClick(e) {
-    e.preventDefault()
-    await axios.get("/logout-action")
-    router.replace("/login")
-    router.refresh()
+    e.preventDefault();
+    await axios.get("/logout-action");
+    router.replace("/login");
+    router.refresh();
   }
 
   return (
@@ -43,5 +44,5 @@ export default function Footer(props) {
         <p>&copy; 2023 Fake Adoption Center. All rights reserved.</p>
       </footer>
     </>
-  )
+  );
 }
