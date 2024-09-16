@@ -1,14 +1,21 @@
 import Pusher from "pusher-js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Chat() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [socketId, setSocketId] = useState();
+  const [messageLog, setMessageLog] = useState([]);
+  const [userMessage, setUserMessage] = useState("");
+  const chatField = useRef();
+  const chatLogElement = useRef(null);
 
   function openChatClick() {
     setIsChatOpen(true);
     setUnreadCount(0);
+    setTimeout(() => {
+      chatField.current.focus();
+    }, 350);
   }
 
   function closeChatClick() {
@@ -23,10 +30,21 @@ export default function Chat() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: "Unicorn pizza",
+        message: userMessage,
         socket_id: socketId,
       }),
     });
+
+    setMessageLog((prev) => [
+      ...prev,
+      { message: userMessage, selfMessage: true },
+    ]);
+
+    setUserMessage("");
+  }
+
+  function handleInputChange(e) {
+    setUserMessage(e.target.value.trim());
   }
 
   useEffect(() => {
@@ -41,10 +59,20 @@ export default function Chat() {
     const channel = pusher.subscribe("private-petchat");
     channel.bind("message", function (data) {
       console.log(data);
+      setMessageLog((prev) => [...prev, data]);
     });
 
     return () => {};
   }, []);
+
+  useEffect(() => {
+    if (messageLog.length) {
+      chatLogElement.current.scrollTop = chatLogElement.current.scrollHeight;
+      if (!isChatOpen) {
+        setUnreadCount((prev) => prev + 1);
+      }
+    }
+  }, [messageLog]);
 
   return (
     <>
@@ -86,43 +114,31 @@ export default function Chat() {
           </svg>
         </div>
 
-        <div className="chat-log">
-          <div className="chat-message">
-            <div className="chat-message-inner">
-              We need to reach out to the local community for donations.
-            </div>
-          </div>
-          <div className="chat-message">
-            <div className="chat-message-inner">Bob, can you do that?</div>
-          </div>
-          <div className="chat-message">
-            <div className="chat-message-inner">Bob, can you do that?</div>
-          </div>
-          <div className="chat-message">
-            <div className="chat-message-inner">Bob, can you do that?</div>
-          </div>
-          <div className="chat-message">
-            <div className="chat-message-inner">Bob, can you do that?</div>
-          </div>
-          <div className="chat-message">
-            <div className="chat-message-inner">Bob, can you do that?</div>
-          </div>
-          <div className="chat-message chat-message--self">
-            <div className="chat-message-inner">
-              Sure, no problem. I'll get on it right away. Lorem ipsum dolor sit
-              amet consectetur adipisicing elit. Deleniti nobis laboriosam
-              distinctio sunt non quam cum repudiandae vero vel, aliquid
-              veritatis. Enim nostrum doloremque repellat ipsum impedit
-              consequuntur sapiente ipsa.
-            </div>
-          </div>
+        <div ref={chatLogElement} className="chat-log">
+          {messageLog.map((item, index) => {
+            return (
+              <div
+                key={index}
+                className={
+                  item.selfMessage
+                    ? "chat-message chat-message--self"
+                    : "chat-message"
+                }
+              >
+                <div className="chat-message-inner">{item.message}</div>
+              </div>
+            );
+          })}
         </div>
 
         <form onSubmit={handleChatSubmit}>
           <input
+            ref={chatField}
+            onChange={handleInputChange}
             type="text"
             autoComplete="off"
             placeholder="your message here"
+            value={userMessage}
           />
         </form>
       </div>
