@@ -30,21 +30,21 @@ export default function Chat() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: userMessage,
+        message: userMessage.trim(),
         socket_id: socketId,
       }),
     });
 
     setMessageLog((prev) => [
       ...prev,
-      { message: userMessage, selfMessage: true },
+      { message: userMessage.trim(), selfMessage: true },
     ]);
 
     setUserMessage("");
   }
 
   function handleInputChange(e) {
-    setUserMessage(e.target.value.trim());
+    setUserMessage(e.target.value);
   }
 
   useEffect(() => {
